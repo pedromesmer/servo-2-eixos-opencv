@@ -39,17 +39,11 @@ while cap.isOpened():
 
                 if i == 8: # ponta indicador
 
-                    height, width, _ = frame.shape
+                    x_send = int(landmark.x * 1000)
+                    y_send = int(landmark.y * 1000)
 
-                    center_x = width // 2
-                    center_y = height // 2
-
-                    erro_x = x - center_x
-                    erro_y = y - center_y
-
-                    msg = f"{erro_x},{erro_y}\n"
+                    msg = f"{x_send},{y_send}\n"
                     arduino.write(msg.encode("utf-8"))
-
 
                     cv2.putText(frame, f"{i}: ({landmark.x:.2f}, {landmark.y:.2f}, {landmark.z:.2f})",
                                 (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1, cv2.LINE_AA)

@@ -1,14 +1,14 @@
 #include <Servo.h>
 
-/*
-Instável, a camera deve ficar no servo e o servo sempre tentar centralizar o alvo.
-atualmente, a camera está fixa e o servo reflete o movimento do alvo.
-*/
-
-int xRead = 0;
-int yRead = 0;
+int erroX = 0;
+int erroY = 0;
 
 Servo servoX, servoY;
+
+float anguloX = 90;
+float anguloY = 45;
+
+float ganho = 0.02;
 
 void setup() {
   Serial.begin(115200);
@@ -16,31 +16,41 @@ void setup() {
   servoX.attach(9);
   servoY.attach(10);
 
-  servoX.write(90);
-  servoY.write(45);
+  servoX.write(anguloX);
+  servoY.write(anguloY);
 }
 
 void loop() {
+
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
-
     int commaIndex = data.indexOf(',');
 
     if (commaIndex > 0) {
-      xRead = data.substring(0, commaIndex).toInt();
-      yRead = data.substring(commaIndex + 1).toInt();
 
-      float x = (xRead * 180.0) / 1000.0; // 0 a 180
-      float y = (yRead *  90.0) / 1000.0; // 0 a 90
+      erroX = data.substring(0, commaIndex).toInt();
+      erroY = data.substring(commaIndex + 1).toInt();
 
-      servoX.write(180 - x);
-      servoY.write(y);
+      int deadzone = 15;
 
-      // debug
-      Serial.print("X: ");
-      Serial.print(x);
-      Serial.print(" | Y: ");
-      Serial.println(y);
+      if (abs(erroX) < deadzone) {
+        erroX = 0;
+      }
+
+      if (abs(erroY) < deadzone) {
+        erroY = 0;
+      }
+
+      // movimento proporcional ao erro
+      anguloX -= erroX * ganho;
+      anguloY += erroY * ganho;
+
+      // limites físicos
+      anguloX = constrain(anguloX, 0, 180);
+      anguloY = constrain(anguloY, 0, 90);
+
+      servoX.write(anguloX);
+      servoY.write(anguloY);
     }
   }
 }
